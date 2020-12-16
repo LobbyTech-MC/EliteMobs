@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class CooldownHandler {
 
-    public static void initialize(ArrayList list, Object object, int cooldownInTicks) {
+    public static void initialize(ArrayList<Object> list, Object object, int cooldownInTicks) {
 
         list.add(object);
 

@@ -25,7 +25,7 @@ public class CustomTreasureChestsConfig {
         return customTreasureChestConfigFields.get(fileName);
     }
 
-    private static ArrayList<CustomTreasureChestConfigFields> customBossConfigFieldsList = new ArrayList(Arrays.asList(
+    private static ArrayList<CustomTreasureChestConfigFields> customBossConfigFieldsList = new ArrayList<CustomTreasureChestConfigFields>(Arrays.asList(
             new TestCustomTreasureChestConfig()
     ));
 

@@ -19,7 +19,7 @@ public class DungeonPackagerConfig {
 
     public static final HashMap<String, DungeonPackagerConfigFields> dungeonPackages = new HashMap<>();
 
-    private static final ArrayList<DungeonPackagerConfigFields> dungeonPackagerConfigFields = new ArrayList(Arrays.asList(
+    private static final ArrayList<DungeonPackagerConfigFields> dungeonPackagerConfigFields = new ArrayList<DungeonPackagerConfigFields>(Arrays.asList(
             new DarkCathedralLair(),
             new ColosseumLair(),
             new SewersMinidungeon(),
