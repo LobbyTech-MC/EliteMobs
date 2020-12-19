@@ -31,7 +31,7 @@ public class FlamethrowerEnchantment extends CustomEnchantment {
         super(key, false);
     }
 
-    private static final ArrayList<Player> playersUsingFlamethrower = new ArrayList<>();
+    private static final ArrayList<Object> playersUsingFlamethrower = new ArrayList<>();
 
     private static List<Location> generateDamagePoints(Player player, Location fixedPlayerLocation) {
         List<Location> locations = new ArrayList<>();
