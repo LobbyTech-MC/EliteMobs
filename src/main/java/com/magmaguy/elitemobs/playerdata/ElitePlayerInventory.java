@@ -155,7 +155,7 @@ public class ElitePlayerInventory {
     }
 
     /**
-     * Outputs the base damage reduction given the current gear. Does not take secondary enchantements into accounts,
+     * Outputs the base damage reduction given the current gear. Does not take secondary enchantments into accounts,
      * such as Blast Protection
      *
      * @return Base damage reduction value
@@ -164,4 +164,12 @@ public class ElitePlayerInventory {
         return getArmorTier(true);
     }
 
+    /**
+     * Outputs the total level of the thorns enchantment across all armor
+     *
+     * @return Total thorns enchantment level
+     */
+    public int getThornsLevel() {
+        return helmet.thornsLevel + chestplate.thornsLevel + leggings.thornsLevel + boots.thornsLevel;
+    }
 }

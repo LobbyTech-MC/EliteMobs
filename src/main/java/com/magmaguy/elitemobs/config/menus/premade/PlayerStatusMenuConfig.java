@@ -1,9 +1,9 @@
 package com.magmaguy.elitemobs.config.menus.premade;
 
+import com.magmaguy.elitemobs.playerdata.statusscreen.PlayerStatusScreen;
 import com.magmaguy.elitemobs.config.AdventurersGuildConfig;
 import com.magmaguy.elitemobs.config.ConfigurationEngine;
 import com.magmaguy.elitemobs.config.menus.MenusConfigFields;
-import com.magmaguy.elitemobs.playerdata.statusscreen.PlayerStatusScreen;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class PlayerStatusMenuConfig extends MenusConfigFields {
@@ -34,9 +34,9 @@ public class PlayerStatusMenuConfig extends MenusConfigFields {
 
         indexLineCreator(0, "&0&m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯", "", "", fileConfiguration);
         indexLineCreator(1, "&5&l/ag &7- &6EliteMobs Hub",
-                "CLICK TO USE\\n" +
-                        "The place where you can find\\n" +
-                        "NPCs that give quests, buy and\\n" +
+                "CLICK TO USE\n" +
+                        "The place where you can find\n" +
+                        "NPCs that give quests, buy and\n" +
                         "sell items, give advice and more!",
                 "/ag", fileConfiguration);
         indexLineCreator(2, "&0&m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯", "", "", fileConfiguration);

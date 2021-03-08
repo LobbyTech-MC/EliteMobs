@@ -12,7 +12,7 @@ public class BackTeleporter extends NPCsConfigFields {
                 "Hermes",
                 "<Transporter>",
                 "FLETCHER",
-                "EliteMobs_adventurers_guild,213.5,88,232,0,0",
+                "em_adventurers_guild,213.5,88,232,0,0",
                 Arrays.asList(
                         "Welcome to the\\nAdventurer's Guild Hub!"),
                 Arrays.asList(
@@ -24,6 +24,7 @@ public class BackTeleporter extends NPCsConfigFields {
                 3,
                 false,
                 "TELEPORT_BACK");
+        super.getAdditionalConfigOptions().put("noPreviousLocationMessage", "&8[EliteMobs] &cCouldn't send you back to your previous location - no previous location found!");
     }
 
 }

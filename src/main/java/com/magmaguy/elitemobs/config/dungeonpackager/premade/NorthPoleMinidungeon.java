@@ -1,6 +1,7 @@
 package com.magmaguy.elitemobs.config.dungeonpackager.premade;
 
 import com.magmaguy.elitemobs.config.dungeonpackager.DungeonPackagerConfigFields;
+import com.magmaguy.elitemobs.utils.DiscordLinks;
 import org.bukkit.World;
 import org.bukkit.util.Vector;
 
@@ -16,9 +17,9 @@ public class NorthPoleMinidungeon extends DungeonPackagerConfigFields {
                         "&6Credits: MagmaGuy & 69OzCanOfBepis"),
                 null,
                 null,
-                "https://discord.gg/vRW9wXhK",
+                DiscordLinks.freeMinidungeons,
                 DungeonSizeCategory.MINIDUNGEON,
-                "elitemobs_northpole",
+                "em_north_pole",
                 null,
                 World.Environment.NORMAL,
                 true,
@@ -30,6 +31,8 @@ public class NorthPoleMinidungeon extends DungeonPackagerConfigFields {
                 1,
                 "Difficulty: &6Medium\n" +
                         "$bossCount bosses, from level $lowestTier to $highestTier\n" +
-                        "&6Christmas in a snow globe!");
+                        "&6Christmas in a snow globe!",
+                "&8[EM] &7You have reached the North Pole! &fHave you been naughty this year?",
+                "&8[EM] &7Come back and visit. &fThere are plenty of sweets and treats for next time!");
     }
 }

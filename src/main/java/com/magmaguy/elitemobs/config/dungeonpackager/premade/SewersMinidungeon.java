@@ -1,6 +1,7 @@
 package com.magmaguy.elitemobs.config.dungeonpackager.premade;
 
 import com.magmaguy.elitemobs.config.dungeonpackager.DungeonPackagerConfigFields;
+import com.magmaguy.elitemobs.utils.DiscordLinks;
 import org.bukkit.World;
 import org.bukkit.util.Vector;
 
@@ -16,9 +17,9 @@ public class SewersMinidungeon extends DungeonPackagerConfigFields {
                         "&6Credits: MagmaGuy & 69OzCanOfBepis"),
                 Arrays.asList(""),
                 Arrays.asList(""),
-                "https://discord.gg/vRW9wXhK",
+                DiscordLinks.freeMinidungeons,
                 DungeonSizeCategory.MINIDUNGEON,
-                "elitemobs_sewer_maze",
+                "em_sewer_maze",
                 null,
                 World.Environment.NORMAL,
                 true,
@@ -30,6 +31,9 @@ public class SewersMinidungeon extends DungeonPackagerConfigFields {
                 2,
                 "Difficulty: &6Medium\n" +
                         "$bossCount bosses, from level $lowestTier to $highestTier\n" +
-                        "&6A complex dungeon maze with a challenging sections!");
+                        "&6A complex dungeon maze with a challenging sections!",
+                "&8[EM] &5This place looks abandoned... &dYet something lurks in these sewers!",
+
+                "&8[EM] &5You managed to stay above water. &dMaybe next time you'll drown.");
     }
 }

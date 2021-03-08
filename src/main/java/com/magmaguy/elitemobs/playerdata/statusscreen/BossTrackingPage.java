@@ -1,7 +1,7 @@
 package com.magmaguy.elitemobs.playerdata.statusscreen;
 
-import com.magmaguy.elitemobs.config.menus.premade.PlayerStatusMenuConfig;
 import com.magmaguy.elitemobs.mobconstructor.custombosses.CustomBossEntity;
+import com.magmaguy.elitemobs.config.menus.premade.PlayerStatusMenuConfig;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -9,7 +9,6 @@ import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 public class BossTrackingPage {
     protected static TextComponent[] bossTrackingPage(Player player) {
@@ -31,17 +30,10 @@ public class BossTrackingPage {
 
         ArrayList<TextComponent> textComponents = new ArrayList<>();
         int counter = 0;
-        for (Iterator<CustomBossEntity> customBossEntityIterator = CustomBossEntity.trackableCustomBosses.iterator(); customBossEntityIterator.hasNext(); ) {
-            CustomBossEntity customBossEntity = customBossEntityIterator.next();
-            if (customBossEntity == null ||
-                    customBossEntity.advancedGetEntity() == null ||
-                    customBossEntity.advancedGetEntity().isDead()) {
-                customBossEntityIterator.remove();
-                continue;
-            }
+        for (CustomBossEntity customBossEntity : CustomBossEntity.trackableCustomBosses) {
             TextComponent message = new TextComponent(customBossEntity.bossBarMessage(player, customBossEntity.customBossConfigFields.getLocationMessage()) + "\n");
             message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(PlayerStatusMenuConfig.onBossTrackHover).create()));
-            message.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/elitemobs trackcustomboss " + player.getName() + " " + customBossEntity.uuid));
+            message.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/elitemobs trackcustomboss " + customBossEntity.uuid));
             textComponents.add(message);
 
             counter++;
@@ -52,12 +44,14 @@ public class BossTrackingPage {
             textComponent[0] = configTextComponent;
             return textComponent;
         } else {
-            TextComponent[] textComponent = new TextComponent[(int) Math.ceil(counter / 6d)];
+            TextComponent[] textComponent = new TextComponent[(int) Math.floor(counter / 6D) + 1];
             int internalCounter = 0;
+            textComponent[0] = configTextComponent;
             for (TextComponent text : textComponents) {
-                if (internalCounter % 6 == 0)
-                    textComponent[(int) Math.floor(internalCounter / 6d)] = configTextComponent;
-                textComponent[(int) Math.floor(internalCounter / 6d)].addExtra(text);
+                int currentPage = (int) Math.floor(internalCounter / 6D);
+                if (textComponent[currentPage] == null)
+                    textComponent[currentPage] = new TextComponent();
+                textComponent[currentPage].addExtra(text);
                 internalCounter++;
             }
             return textComponent;

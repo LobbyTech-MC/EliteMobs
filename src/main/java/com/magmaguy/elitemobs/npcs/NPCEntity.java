@@ -2,32 +2,38 @@ package com.magmaguy.elitemobs.npcs;
 
 import com.magmaguy.elitemobs.ChatColorConverter;
 import com.magmaguy.elitemobs.MetadataHandler;
+import com.magmaguy.elitemobs.api.internal.RemovalReason;
 import com.magmaguy.elitemobs.config.npcs.NPCsConfig;
 import com.magmaguy.elitemobs.config.npcs.NPCsConfigFields;
 import com.magmaguy.elitemobs.entitytracker.EntityTracker;
+import com.magmaguy.elitemobs.entitytracker.NPCEntityTracker;
+import com.magmaguy.elitemobs.mobconstructor.SimplePersistentEntity;
+import com.magmaguy.elitemobs.mobconstructor.SimplePersistentEntityInterface;
 import com.magmaguy.elitemobs.npcs.chatter.NPCChatBubble;
 import com.magmaguy.elitemobs.thirdparty.worldguard.WorldGuardSpawnEventBypasser;
 import com.magmaguy.elitemobs.utils.ConfigurationLocation;
 import com.magmaguy.elitemobs.utils.NonSolidBlockTypes;
 import com.magmaguy.elitemobs.utils.WarningMessage;
 import org.bukkit.Location;
-import org.bukkit.entity.*;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class NPCEntity {
-
-    private static final HashSet<NPCEntity> npcEntityHashSet = new HashSet<>();
+public class NPCEntity implements SimplePersistentEntityInterface {
 
     private Villager villager;
-
-    private final NPCsConfigFields npCsConfigFields;
+    public UUID uuid;
+    public final NPCsConfigFields npCsConfigFields;
     private String name;
     private String role;
     private ArmorStand roleDisplay;
@@ -44,44 +50,7 @@ public class NPCEntity {
     private boolean isSleeping = false;
     private NPCInteractions.NPCInteractionType npcInteractionType;
     private double timeout;
-
-    /**
-     * Returns the full list of NPCEntities currently registered, alive or not.
-     *
-     * @return List of all NPCEntities
-     */
-    public static HashSet<NPCEntity> getNPCEntityList() {
-        return npcEntityHashSet;
-    }
-
-    public static void addNPCEntity(NPCEntity npcEntity) {
-        npcEntityHashSet.add(npcEntity);
-    }
-
-    /**
-     * Deletes the NPCEntity's data and entities associated to it.
-     *
-     * @param npcEntity NPCEntity to be deleted
-     */
-    public static void removeNPCEntity(NPCEntity npcEntity) {
-        npcEntity.villager.remove();
-        npcEntity.roleDisplay.remove();
-        npcEntityHashSet.remove(npcEntity);
-    }
-
-    /**
-     * Gets a specific NPCEntity based on the config npCsConfigFields they have
-     *
-     * @param npCsConfigFields Fields to compare
-     * @return NPCEntity associated to this npCsConfigFields
-     */
-    public static NPCEntity getNPCEntityFromFields(NPCsConfigFields npCsConfigFields) {
-        for (NPCEntity npcEntity : npcEntityHashSet)
-            if (npcEntity.npCsConfigFields.getFileName().equals(npCsConfigFields.getFileName()))
-                return npcEntity;
-
-        return null;
-    }
+    public boolean sleepScheduled = false;
 
     /**
      * Spawns NPC based off of the values in the NPCsConfig config file. Runs at startup and on reload.
@@ -97,9 +66,19 @@ public class NPCEntity {
         if (npCsConfigFields.getLocation().equalsIgnoreCase("null"))
             return;
 
+        ArrayList<NPCEntity> npcEntitiesToCull = new ArrayList<>();
+
+        for (NPCEntity npcEntity : NPCEntityTracker.npcEntities.values())
+            if (npcEntity.getSpawnLocation().equals(spawnLocation))
+                npcEntitiesToCull.add(npcEntity);
+
+        for (NPCEntity npcEntity : npcEntitiesToCull)
+            npcEntity.removeNPCEntity();
+
         WorldGuardSpawnEventBypasser.forceSpawn();
         try {
             this.villager = (Villager) spawnLocation.getWorld().spawnEntity(spawnLocation, EntityType.VILLAGER);
+            this.uuid = villager.getUniqueId();
         } catch (Exception ex) {
             new WarningMessage("NPC " + npCsConfigFields.getFileName() + " tried to spawn in an invalid location. " +
                     "This may be due to region protection preventing it from spawning correctly. If not, delete the location" +
@@ -107,7 +86,7 @@ public class NPCEntity {
             return;
         }
 
-        this.villager.setRemoveWhenFarAway(true);
+        this.villager.setRemoveWhenFarAway(false);
 
         if (!villager.isValid()) return;
 
@@ -125,9 +104,6 @@ public class NPCEntity {
         setTimeout();
 
         EntityTracker.registerNPCEntity(this);
-        addNPCEntity(this);
-        dupeBuster();
-
     }
 
     /**
@@ -144,7 +120,7 @@ public class NPCEntity {
 
         potentialLocation.add(potentialLocation.getDirection().normalize()).setY(location.getY());
 
-        if (NonSolidBlockTypes.isNonSolidBlock(potentialLocation.getBlock().getType()))
+        if (NonSolidBlockTypes.isPassthrough(potentialLocation.getBlock().getType()))
             this.spawnLocation = potentialLocation;
         else
             this.spawnLocation = location.clone();
@@ -153,6 +129,7 @@ public class NPCEntity {
         WorldGuardSpawnEventBypasser.forceSpawn();
         try {
             this.villager = (Villager) spawnLocation.getWorld().spawnEntity(spawnLocation, EntityType.VILLAGER);
+            this.uuid = villager.getUniqueId();
         } catch (Exception ex) {
             new WarningMessage("NPC " + npCsConfigFields.getFileName() + " tried to spawn in an invalid location. " +
                     "This may be due to region protection preventing it from spawning correctly. If not, delete the location" +
@@ -160,7 +137,7 @@ public class NPCEntity {
             return;
         }
 
-        this.villager.setRemoveWhenFarAway(true);
+        this.villager.setRemoveWhenFarAway(false);
 
         if (!villager.isValid()) return;
 
@@ -178,31 +155,28 @@ public class NPCEntity {
         setTimeout();
 
         EntityTracker.registerNPCEntity(this);
-        addNPCEntity(this);
-        dupeBuster();
-
     }
 
-    /**
-     * Respawns the villager associated with the NPCEntity. Used for when chunks that contain NPCEntities load back up
-     * as it makes sure the former Villager is slain.
-     */
-    public void respawnNPC() {
-        for (Entity entity : getSpawnLocation().getWorld().getNearbyEntities(getSpawnLocation(), 1.5, 3, 1.5))
-            if (entity instanceof ArmorStand || entity instanceof Villager)
-                if (entity.getCustomName() != null)
-                    entity.remove();
+    public SimplePersistentEntity simplePersistentEntity;
+
+    @Override
+    public void chunkUnload() {
+        villager.remove();
+        if (timeout < 1)
+            simplePersistentEntity = new SimplePersistentEntity(this);
+    }
+
+    @Override
+    public void chunkLoad() {
         WorldGuardSpawnEventBypasser.forceSpawn();
-        villager = (Villager) spawnLocation.getWorld().spawnEntity(spawnLocation, EntityType.VILLAGER);
-        villager.setCustomName(name);
-        villager.setCustomNameVisible(true);
-        villager.setProfession(profession);
-        villager.setAI(canMove);
-        villager.setRemoveWhenFarAway(true);
+        this.villager = (Villager) spawnLocation.getWorld().spawnEntity(spawnLocation, EntityType.VILLAGER);
+        this.uuid = villager.getUniqueId();
+        setName(npCsConfigFields.getName());
+        setProfession(npCsConfigFields.getProfession());
         initializeRole(role);
-        dupeBuster();
+        setCanMove(canMove);
+        EntityTracker.registerNPCEntity(this);
     }
-
 
     /**
      * Returns the Villager associated to this NPCEntity
@@ -248,11 +222,12 @@ public class NPCEntity {
         this.role = role;
         this.roleDisplay = (ArmorStand) this.villager.getWorld().spawnEntity(villager.getLocation().add(new Vector(0, 1.72, 0)), EntityType.ARMOR_STAND);
         EntityTracker.registerArmorStands(this.roleDisplay);
-        this.roleDisplay.setCustomName(role);
+        this.roleDisplay.setCustomName(ChatColorConverter.convert(role));
         this.roleDisplay.setCustomNameVisible(true);
         this.roleDisplay.setMarker(true);
         this.roleDisplay.setVisible(false);
         this.roleDisplay.setGravity(false);
+        this.roleDisplay.setPersistent(false);
     }
 
     /**
@@ -468,7 +443,6 @@ public class NPCEntity {
      * @param disappearsAtNight Whether the entity goes to "sleep" at night time
      */
     public void setDisappearsAtNight(boolean disappearsAtNight) {
-        if (disappearsAtNight) NPCWorkingHours.registerSleepEnabledNPC(this);
         this.disappearsAtNight = disappearsAtNight;
     }
 
@@ -516,13 +490,23 @@ public class NPCEntity {
     public void setTimeout() {
         this.timeout = npCsConfigFields.getTimeout();
         if (timeout <= 0) return;
-        NPCEntity npcEntity = this;
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                removeNPCEntity(npcEntity);
-            }
-        }.runTaskLater(MetadataHandler.PLUGIN, (long) (20 * 60 * timeout));
+        removeNPCEntity();
+    }
+
+
+    /**
+     * Deletes the NPCEntity's data and entities associated to it.
+     */
+    public void removeNPCEntity() {
+        roleDisplay.remove();
+        EntityTracker.unregister(villager, RemovalReason.NPC_TIMEOUT);
+    }
+
+    public void deleteNPCEntity() {
+        roleDisplay.remove();
+        EntityTracker.unregister(villager, RemovalReason.NPC_TIMEOUT);
+        npCsConfigFields.setEnabled(false);
+        new NPCEntity(npCsConfigFields);
     }
 
     /**
@@ -565,7 +549,6 @@ public class NPCEntity {
 
     /**
      * Sends a farewell message to a player from the list of farewell messages the NPCEntity has
-     * e
      *
      * @param player
      */
@@ -583,18 +566,6 @@ public class NPCEntity {
         if (strings != null && !strings.isEmpty())
             return strings.get(ThreadLocalRandom.current().nextInt(strings.size()));
         return null;
-    }
-
-
-    //Busting makes me feel good!
-    //todo: remove due to potential annoyance with travelling merchant
-    private void dupeBuster() {
-        if (!villager.isValid())
-            return;
-        for (Entity entity : villager.getNearbyEntities(0.001, 0.001, 0.001))
-            if ((entity instanceof Villager && entity.getCustomName() != null) ||
-                    (entity instanceof ArmorStand && !entity.equals(roleDisplay)))
-                entity.remove();
     }
 
 }

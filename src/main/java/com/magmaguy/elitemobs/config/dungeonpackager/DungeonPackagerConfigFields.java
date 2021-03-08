@@ -25,7 +25,8 @@ public class DungeonPackagerConfigFields {
         LAIR,
         MINIDUNGEON,
         DUNGEON,
-        RAID
+        RAID,
+        ADVENTURE
     }
 
     private final String fileName;
@@ -51,6 +52,8 @@ public class DungeonPackagerConfigFields {
     private final Double teleportPointYaw;
     private final int dungeonVersion;
     private final String playerInfo;
+    private final String regionEnterMessage;
+    private final String regionLeaveMessage;
 
     public DungeonPackagerConfigFields(String fileName,
                                        boolean isEnabled,
@@ -71,7 +74,9 @@ public class DungeonPackagerConfigFields {
                                        Double teleportPointPitch,
                                        Double teleportPointYaw,
                                        int dungeonVersion,
-                                       String playerInfo) {
+                                       String playerInfo,
+                                       String regionEnterMessage,
+                                       String regionLeaveMessage) {
         this.fileName = fileName + ".yml";
         this.isEnabled = isEnabled;
         this.name = name;
@@ -93,6 +98,8 @@ public class DungeonPackagerConfigFields {
         this.teleportPointYaw = teleportPointYaw;
         this.dungeonVersion = dungeonVersion;
         this.playerInfo = playerInfo;
+        this.regionEnterMessage = regionEnterMessage;
+        this.regionLeaveMessage = regionLeaveMessage;
     }
 
     public void generateConfigDefaults(FileConfiguration fileConfiguration) {
@@ -121,6 +128,8 @@ public class DungeonPackagerConfigFields {
         fileConfiguration.addDefault("teleportPointYaw", teleportPointYaw);
         fileConfiguration.addDefault("dungeonVersion", dungeonVersion);
         fileConfiguration.addDefault("playerInfo", playerInfo);
+        fileConfiguration.addDefault("regionEnterMessage", regionEnterMessage);
+        fileConfiguration.addDefault("regionLeaveMessage", regionLeaveMessage);
     }
 
     public DungeonPackagerConfigFields(FileConfiguration fileConfiguration, File file) {
@@ -175,6 +184,8 @@ public class DungeonPackagerConfigFields {
         teleportPointYaw = fileConfiguration.getDouble("teleportPointYaw");
         dungeonVersion = fileConfiguration.getInt("dungeonVersion");
         playerInfo = fileConfiguration.getString("playerInfo");
+        regionEnterMessage = fileConfiguration.getString("regionEnterMessage");
+        regionLeaveMessage = fileConfiguration.getString("regionLeaveMessage");
     }
 
     public String getFileName() {
@@ -258,14 +269,20 @@ public class DungeonPackagerConfigFields {
         roundedLocation.setY(roundedLocation.getBlockY() + 0.5);
         roundedLocation.setZ(roundedLocation.getBlockZ() + 0.5);
         float roundedYaw = roundedLocation.getYaw();
-        if (roundedYaw <= 45 && roundedYaw >= -45)
-            roundedYaw = 0;
-        else if (roundedYaw >= 45 && roundedYaw <= 135)
-            roundedYaw = 90;
-        else if (roundedYaw <= -45 && roundedYaw >= -135)
-            roundedYaw = -90;
-        else if (roundedYaw >= 135 || roundedYaw <= -135)
-            roundedYaw = 180;
+        while (roundedYaw < -225F) {
+            roundedYaw += 360F;
+        }
+        while (roundedYaw > 225F) {
+            roundedYaw -= 360F;
+        }
+        if (roundedYaw <= 45F && roundedYaw >= -45F)
+            roundedYaw = 0F;
+        else if (roundedYaw >= 45F && roundedYaw <= 135F)
+            roundedYaw = 90F;
+        else if (roundedYaw <= -45F && roundedYaw >= -135F)
+            roundedYaw = -90F;
+        else if (roundedYaw >= 135F || roundedYaw <= -135F)
+            roundedYaw = 180F;
         roundedLocation.setYaw(roundedYaw);
         this.anchorPoint = roundedLocation;
         setRotation(roundedYaw);
@@ -313,5 +330,13 @@ public class DungeonPackagerConfigFields {
 
     public String getPlayerInfo() {
         return playerInfo;
+    }
+
+    public String getRegionEnterMessage() {
+        return ChatColorConverter.convert(regionEnterMessage);
+    }
+
+    public String getRegionLeaveMessage() {
+        return ChatColorConverter.convert(regionLeaveMessage);
     }
 }

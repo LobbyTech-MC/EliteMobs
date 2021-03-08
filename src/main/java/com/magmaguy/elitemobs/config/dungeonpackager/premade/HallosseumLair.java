@@ -1,6 +1,7 @@
 package com.magmaguy.elitemobs.config.dungeonpackager.premade;
 
 import com.magmaguy.elitemobs.config.dungeonpackager.DungeonPackagerConfigFields;
+import com.magmaguy.elitemobs.utils.DiscordLinks;
 import org.bukkit.World;
 import org.bukkit.util.Vector;
 
@@ -16,9 +17,9 @@ public class HallosseumLair extends DungeonPackagerConfigFields {
                         "&6Credits: MagmaGuy & 69OzCanOfBepis"),
                 Arrays.asList(""),
                 Arrays.asList(""),
-                "https://discord.gg/vRW9wXhK",
+                DiscordLinks.freeMinidungeons,
                 DungeonSizeCategory.LAIR,
-                "hallosseum",
+                "em_hallosseum",
                 null,
                 World.Environment.NETHER,
                 true,
@@ -30,6 +31,8 @@ public class HallosseumLair extends DungeonPackagerConfigFields {
                 2,
                 "Difficulty: &6Medium\n" +
                         "$bossCount level $lowestTier Big Boss!\n" +
-                        "&6A fun Halloween challenge!");
+                        "&6A fun Halloween challenge!",
+                "&8[EM] &4Trick or treat! &8Your soul is mine!",
+                "&8[EM] &4You've escaped with your soul intact.");
     }
 }

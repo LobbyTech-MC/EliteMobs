@@ -1,11 +1,17 @@
 package com.magmaguy.elitemobs.commands.setup;
 
 import com.magmaguy.elitemobs.ChatColorConverter;
-import com.magmaguy.elitemobs.config.AdventurersGuildConfig;
-import com.magmaguy.elitemobs.config.DefaultConfig;
+import com.magmaguy.elitemobs.api.PlayerTeleportEvent;
 import com.magmaguy.elitemobs.dungeons.Minidungeon;
+import com.magmaguy.elitemobs.npcs.NPCInitializer;
+import com.magmaguy.elitemobs.thirdparty.worldguard.WorldGuardCompatibility;
+import com.magmaguy.elitemobs.commands.guild.AdventurersGuildCommand;
+import com.magmaguy.elitemobs.config.AdventurersGuildConfig;
+import com.magmaguy.elitemobs.utils.DiscordLinks;
+import com.magmaguy.elitemobs.utils.EventCaller;
 import com.magmaguy.elitemobs.utils.ItemStackGenerator;
 import com.magmaguy.elitemobs.utils.WarningMessage;
+import com.magmaguy.elitemobs.worlds.CustomWorldLoading;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -16,7 +22,10 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 public class SetupMenu {
 
@@ -31,8 +40,6 @@ public class SetupMenu {
     public SetupMenu(Player player) {
         this.inventory = Bukkit.createInventory(player, 54, "Setup menu");
         this.player = player;
-        //reserves the first slot
-        permissionsStatus();
         //reserve adventurer's guild
         adventurersGuildWorldStatus();
         //iterate through dungeons
@@ -41,44 +48,33 @@ public class SetupMenu {
         player.openInventory(inventory);
     }
 
-    private void permissionsStatus() {
-
-        String name = "Currently using";
-        String state;
-        if (DefaultConfig.usePermissions)
-            state = "Permissions!";
-        else
-            state = "Permissionless mode!";
-
-        Material material;
-        if (!DefaultConfig.setupDone) {
-            material = Material.RED_STAINED_GLASS_PANE;
-            state = ChatColor.RED + state;
-        } else {
-            material = Material.GREEN_STAINED_GLASS_PANE;
-            state = ChatColor.GREEN + state;
-        }
-
-        inventory.setItem(validSlots.get(0), ItemStackGenerator.generateItemStack(material, name, Collections.singletonList(state)));
-    }
+    boolean adventurersGuildIsDownloaded = false;
 
     private void adventurersGuildWorldStatus() {
         String state = "Adventurer's Guild world is";
         String lore;
         Material material;
-        if (AdventurersGuildConfig.guildWorldLocation != null) {
+        if (CustomWorldLoading.adventurersGuildWorldExists())
+            adventurersGuildIsDownloaded = true;
+
+        if (!adventurersGuildIsDownloaded) {
             material = Material.RED_STAINED_GLASS_PANE;
-            lore = ChatColor.RED + "Not setup!";
+            lore = ChatColor.RED + "Not downloaded! Click to download!";
         } else {
-            material = Material.GREEN_STAINED_GLASS_PANE;
-            lore = ChatColor.GREEN + "Working correctly!";
+            if (!AdventurersGuildConfig.guildWorldIsEnabled) {
+                material = Material.ORANGE_STAINED_GLASS_PANE;
+                lore = ChatColor.RED + "Not setup! Click to install!";
+            } else {
+                material = Material.GREEN_STAINED_GLASS_PANE;
+                lore = ChatColor.GREEN + "Working correctly! Click to uninstall!";
+            }
         }
-        inventory.setItem(validSlots.get(1), ItemStackGenerator.generateItemStack(material, state, new ArrayList<>(Arrays.asList(lore))));
+        inventory.setItem(validSlots.get(0), ItemStackGenerator.generateItemStack(material, state, new ArrayList<>(Arrays.asList(lore))));
     }
 
     private void dungeonStatuses() {
         //continue counting from used inventory slots
-        int counter = 2;
+        int counter = 1;
         for (Minidungeon minidungeon : Minidungeon.minidungeons.values()) {
 
             if (!Bukkit.getPluginManager().isPluginEnabled("WorldGuard"))
@@ -187,18 +183,80 @@ public class SetupMenu {
             Player player = (Player) event.getWhoClicked();
             //for permissions mode
             //for adventurer's guild world
+            if (event.getSlot() == 10) {
+                //case where Adventurer's Guild Hub isn't downloaded
+                if (!setupMenu.adventurersGuildIsDownloaded) {
+                    player.closeInventory();
+                    player.sendMessage("----------------------------------------------------");
+                    player.sendMessage(ChatColorConverter.convert("&8[EliteMobs] &2Adventurer's Guild Hub download link: &9&nhttps://magmaguy.com/downloads/em_adventurers_guild.zip"));
+                    player.sendMessage(ChatColorConverter.convert("&8[EliteMobs] &aOnce downloaded, follow this setup guide: &9&nhttps://youtu.be/boRg2X4qhw4"));
+                    player.sendMessage(ChatColorConverter.convert("&8[EliteMobs] &2Need help? " + DiscordLinks.mainLink));
+                    player.sendMessage("----------------------------------------------------");
+                } else {
+                    //case for install
+                    if (!AdventurersGuildConfig.guildWorldIsEnabled) {
+                        try {
+                            player.closeInventory();
+                            player.sendMessage("----------------------------------------------------");
+                            CustomWorldLoading.startupWorldInitialization();
+                            AdventurersGuildCommand.defineTeleportLocation();
+                            AdventurersGuildConfig.toggleGuildInstall();
+                            //new NPCInitializer();
+                            if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
+                                WorldGuardCompatibility.protectWorldMinidugeonArea(AdventurersGuildCommand.defineTeleportLocation());
+                                player.sendMessage(ChatColorConverter.convert("&8[EliteMobs] &2The Adventurer's Guild Hub has been protected against griefing and mob spawning (among others)!"));
+                            } else
+                                player.sendMessage(ChatColorConverter.convert("&8[EliteMobs] &4It is highly recommended you install WorldGuard to protect the Adventurer's Guild Hub World! Reinstall the hub through /em setup after installing WorldGuard in order to automatically protect the area!"));
+                            PlayerTeleportEvent playerTeleportEvent = new PlayerTeleportEvent(player, AdventurersGuildConfig.guildWorldLocation);
+                            new EventCaller(playerTeleportEvent);
+                            if (!playerTeleportEvent.isCancelled())
+                                player.teleport(AdventurersGuildConfig.guildWorldLocation);
+                            player.sendMessage(ChatColorConverter.convert("&8[EliteMobs] &2Successfully installed Adventurer's Guild Hub! Do &a/ag &2to go there and talk to the transporter or open the Teleports page in /em to go back!"));
+                            player.sendMessage(ChatColorConverter.convert("&8[EliteMobs] &2Need help? &9&n" + DiscordLinks.mainLink));
+                            player.sendMessage("----------------------------------------------------");
+                        } catch (Exception e) {
+                            player.closeInventory();
+                            player.sendMessage(ChatColorConverter.convert("&8[EliteMobs] &4Failed to install Adventurer's Guild Hub! Report this to the dev!"));
+                            player.sendMessage("----------------------------------------------------");
+                            e.printStackTrace();
+                        }
+                        //case for uninstall
+                    } else {
+                        try {
+                            player.closeInventory();
+                            Bukkit.unloadWorld(AdventurersGuildConfig.guildWorldLocation.getWorld(), true);
+                            AdventurersGuildConfig.guildWorldLocation = null;
+                            AdventurersGuildConfig.toggleGuildInstall();
+                            player.sendMessage("----------------------------------------------------");
+                            player.sendMessage(ChatColorConverter.convert("&8[EliteMobs] &2Successfully uninstalled Adventurer's Guild Hub!"));
+                            player.sendMessage("----------------------------------------------------");
+                        } catch (Exception e) {
+                            player.closeInventory();
+                            player.sendMessage("----------------------------------------------------");
+                            player.sendMessage(ChatColorConverter.convert("&8[EliteMobs] &4Failed to uninstall Adventurer's Guild Hub! Report this to the dev!"));
+                            player.sendMessage("----------------------------------------------------");
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                return;
+            }
             //for minidungeons
             Minidungeon minidungeon = setupMenu.minidungeonHashMap.get(event.getSlot());
             if (minidungeon != null) {
                 if (!minidungeon.isDownloaded) {
+                    player.sendMessage("----------------------------------------------------");
                     player.sendMessage(ChatColorConverter.convert("&4Download this at &9" + minidungeon.dungeonPackagerConfigFields.getDownloadLink() + " &4!"));
+                    player.sendMessage("----------------------------------------------------");
                     player.closeInventory();
                     setupMenus.remove(event.getInventory());
                     return;
                 }
                 if (!minidungeon.bossesDownloaded) {
+                    player.sendMessage("----------------------------------------------------");
                     player.sendMessage(ChatColorConverter.convert("&4You are missing the boss files for this minidungeon!"));
                     player.sendMessage(ChatColorConverter.convert("&4Download this at &9" + minidungeon.dungeonPackagerConfigFields.getDownloadLink() + " &4!"));
+                    player.sendMessage("----------------------------------------------------");
                     player.closeInventory();
                     setupMenus.remove(event.getInventory());
                     return;

@@ -37,6 +37,7 @@ public class PlayerItem {
 
     public int damageArthropodsLevel = 0;
     public int damageUndeadLevel = 0;
+    public int thornsLevel = 0;
     private double critChance = 0;
     private double hunterChance = 0;
 
@@ -95,6 +96,8 @@ public class PlayerItem {
 
         this.hunterChance = ItemTagger.getEnchantment(itemStack.getItemMeta(), new NamespacedKey(MetadataHandler.PLUGIN, HunterEnchantment.key)) * EnchantmentsConfig.getEnchantment("hunter.yml").getFileConfiguration().getDouble("hunterSpawnBonus");
 
+        checkArmorSpecificFeatures();
+
         return true;
 
     }
@@ -107,6 +110,14 @@ public class PlayerItem {
         this.damageArthropodsLevel = 0;
         this.damageUndeadLevel = 0;
         return true;
+    }
+
+    private void checkArmorSpecificFeatures() {
+        if (!(equipmentSlot.equals(EquipmentSlot.HELMET) ||
+                equipmentSlot.equals(EquipmentSlot.CHESTPLATE) ||
+                equipmentSlot.equals(EquipmentSlot.LEGGINGS) ||
+                equipmentSlot.equals(EquipmentSlot.BOOTS))) return;
+        this.thornsLevel = ItemTagger.getEnchantment(itemStack.getItemMeta(), Enchantment.THORNS.getKey());
     }
 
     public int getTier(ItemStack itemStack, boolean update) {
